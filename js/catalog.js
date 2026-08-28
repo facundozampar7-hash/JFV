@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
      en formato internacional, sin +, espacios ni guiones.
      Ej: Argentina, código de área 342, número 4123456 -> 5493424123456
      ========================================================= */
-  const WHATSAPP_NUMBER = "543400000000";
+  const WHATSAPP_NUMBER = "543426396371";
 
   const money = (n) => "$" + Number(n).toLocaleString("es-AR");
 
