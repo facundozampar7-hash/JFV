@@ -9,7 +9,7 @@
    Sheets", para los pasos de configuración.
    ========================================================= */
 
-const CATALOG_SHEET_URL = "https://script.google.com/macros/s/AKfycbxJtSqR5R0fJjA1FtnTdhp4eKWmw0CeSllny8nFW-m0IeRs9TEbV8ukGykLQwhnXYEy/exec";
+const CATALOG_SHEET_URL = "https://script.google.com/macros/s/AKfycbyh_8ogzwEXMMJtzQ0_QbeKkixHlDGfr6PEMMl7Zk_1OzR8JWaBlzk1KUMNJEJcgWb9/exec";
 
 /* Secciones fijas del catálogo. Se usan tanto para los filtros
    del catálogo público como para el desplegable del panel de
