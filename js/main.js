@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   window.JFV.showToast = showToast;
 
-  /* ---------- Carrusel de galería (drag + botones) ---------- */
+  /* ---------- Carrusel de galería (automático + pausa al pasar el cursor + drag + botones) ---------- */
   const track = document.getElementById('galleryTrack');
   const prevBtn = document.getElementById('galPrev');
   const nextBtn = document.getElementById('galNext');
@@ -264,8 +264,28 @@ document.addEventListener('DOMContentLoaded', () => {
     prevBtn && prevBtn.addEventListener('click', () => track.scrollBy({ left: -scrollAmount(), behavior: 'smooth' }));
 
     let isDown = false, startX, scrollLeft, velocity = 0, lastX = 0, lastT = 0;
+    let isPaused = false;
+    let autoFrame = null;
+    const autoSpeed = 0.42;
+
+    function autoScroll() {
+      if (!isPaused && !isDown) {
+        track.scrollLeft += autoSpeed;
+        // Al llegar al final, vuelve suavemente al comienzo para que siga funcionando en loop.
+        if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 2) {
+          track.scrollLeft = 0;
+        }
+      }
+      autoFrame = requestAnimationFrame(autoScroll);
+    }
+
+    // Se detiene cuando el cursor está sobre el carrusel.
+    track.addEventListener('mouseenter', () => { isPaused = true; });
+    track.addEventListener('mouseleave', () => { isPaused = false; });
+
     track.addEventListener('pointerdown', (e) => {
       isDown = true;
+      isPaused = true;
       track.classList.add('is-dragging');
       startX = e.clientX;
       scrollLeft = track.scrollLeft;
@@ -290,13 +310,18 @@ document.addEventListener('DOMContentLoaded', () => {
       track.classList.remove('is-dragging');
       let v = velocity;
       (function momentum() {
-        if (Math.abs(v) < 0.02) return;
+        if (Math.abs(v) < 0.02) {
+          isPaused = false;
+          return;
+        }
         track.scrollLeft -= v * 16;
         v *= 0.94;
         requestAnimationFrame(momentum);
       })();
     }
     track.addEventListener('pointerup', stopDrag);
-    track.addEventListener('pointerleave', stopDrag);
+    track.addEventListener('pointercancel', stopDrag);
+
+    autoScroll();
   }
 });
