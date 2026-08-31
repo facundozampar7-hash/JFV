@@ -438,6 +438,7 @@ p{ margin:0; }
   display:flex;
   gap:1.4em;
   overflow-x:auto;
+  overflow-y:hidden;
   scroll-snap-type:x mandatory;
   padding-bottom:1em;
   scrollbar-width:thin;
@@ -1205,4 +1206,24 @@ body.dark-mode .hero::after{ background:radial-gradient(circle, rgba(243,178,62,
 @media(max-width:900px){
   .hero-reference .hero-grid{width:min(92%,620px);}
   .hero-reference h1{font-size:clamp(3rem,8vw,3.45rem);}
+}
+
+/* Ajustes finales del carrusel de trabajos */
+.gallery-track {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+.gallery-controls {
+  position: relative;
+  z-index: 20;
+}
+.gallery-controls button {
+  position: relative;
+  z-index: 21;
+}
+.gallery-item img {
+  transition: transform .45s var(--ease);
+}
+.gallery-item:hover img {
+  transform: scale(1.07);
 }
