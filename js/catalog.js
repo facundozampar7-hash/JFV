@@ -80,11 +80,56 @@ document.addEventListener('DOMContentLoaded', () => {
      Grilla de productos
      --------------------------------------------------------- */
   function productPhoto(p) {
-    if (p.image) return `<img src="${p.image}" alt="${p.name}">`;
-    return `<div class="photo-slot">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>
-      <span>Foto pendiente</span>
-    </div>`;
+    const images = (Array.isArray(p.images) && p.images.length) ? p.images : (p.image ? [p.image] : []);
+
+    if (!images.length) {
+      return `<div class="photo-slot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="28" height="28"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10.5" r="1.5"/><path d="M21 15l-5-5-9 9"/></svg>
+        <span>Foto pendiente</span>
+      </div>`;
+    }
+
+    if (images.length === 1) {
+      return `<img src="${images[0]}" alt="${p.name}">`;
+    }
+
+    const slides = images.map(img => `<div class="photo-slide"><img src="${img}" alt="${p.name}"></div>`).join('');
+    const dots = images.map((_, i) => `<span class="photo-dot${i === 0 ? ' is-active' : ''}"></span>`).join('');
+
+    return `
+      <div class="photo-carousel">
+        <div class="photo-track">${slides}</div>
+        <button type="button" class="photo-arrow prev" aria-label="Foto anterior">‹</button>
+        <button type="button" class="photo-arrow next" aria-label="Foto siguiente">›</button>
+        <div class="photo-dots">${dots}</div>
+      </div>`;
+  }
+
+  function initCarousel(card) {
+    const carousel = card.querySelector('.photo-carousel');
+    if (!carousel) return;
+    const track = carousel.querySelector('.photo-track');
+    const slides = carousel.querySelectorAll('.photo-slide');
+    const dots = carousel.querySelectorAll('.photo-dot');
+    const total = slides.length;
+    let index = 0;
+
+    function go(i) {
+      index = (i + total) % total;
+      track.style.transform = `translateX(-${index * 100}%)`;
+      dots.forEach((d, di) => d.classList.toggle('is-active', di === index));
+    }
+
+    carousel.querySelector('.photo-arrow.prev').addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      go(index - 1);
+    });
+    carousel.querySelector('.photo-arrow.next').addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      go(index + 1);
+    });
   }
 
   function renderProducts() {
@@ -147,6 +192,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
         window.JFV?.attachTilt(card, { max: 5, scale: 1.015 });
       }
+
+      initCarousel(card);
     });
   }
 
