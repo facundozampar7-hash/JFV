@@ -31,8 +31,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let PRODUCTS = [];
   let activeCategory = 'todos';
-  let pendingImageBase64 = null;
-  let currentImageUrl = '';
+  /* photoItems: lista ordenada de las fotos del producto que se está
+     editando. Cada item es { type: 'url', value } para una foto que
+     ya existía, o { type: 'file', value } (dataURL) para una foto
+     nueva recién elegida. */
+  let photoItems = [];
 
   /* ---------------------------------------------------------
      Toast simple (este panel no depende de main.js)
@@ -209,9 +212,28 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ---------------------------------------------------------
      Modal de alta / edición
      --------------------------------------------------------- */
+  function renderPhotoPreview() {
+    if (!photoItems.length) {
+      pImagePreview.innerHTML = '';
+      return;
+    }
+    pImagePreview.innerHTML = photoItems.map((item, i) => `
+      <div class="admin-photo-thumb" data-index="${i}">
+        <img src="${item.value}" alt="">
+        <button type="button" class="admin-photo-remove" aria-label="Quitar foto">✕</button>
+      </div>
+    `).join('');
+    pImagePreview.querySelectorAll('.admin-photo-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const i = Number(btn.closest('.admin-photo-thumb').dataset.index);
+        photoItems.splice(i, 1);
+        renderPhotoPreview();
+      });
+    });
+  }
+
   function openModal(product) {
     productError.classList.remove('is-visible');
-    pendingImageBase64 = null;
     pImage.value = '';
 
     if (product) {
@@ -222,16 +244,18 @@ document.addEventListener('DOMContentLoaded', () => {
       pPrice.value = product.price;
       pCategory.value = product.category;
       pActive.checked = product.active;
-      currentImageUrl = product.image || '';
-      pImagePreview.innerHTML = currentImageUrl ? `<img src="${currentImageUrl}" alt="">` : '';
+      const images = (Array.isArray(product.images) && product.images.length)
+        ? product.images
+        : (product.image ? [product.image] : []);
+      photoItems = images.map(url => ({ type: 'url', value: url }));
     } else {
       modalTitle.textContent = 'Nuevo producto';
       productForm.reset();
       pId.value = '';
-      currentImageUrl = '';
-      pImagePreview.innerHTML = '';
+      photoItems = [];
       pActive.checked = true;
     }
+    renderPhotoPreview();
     modal.classList.add('is-open');
     overlay.classList.add('is-open');
   }
@@ -244,14 +268,21 @@ document.addEventListener('DOMContentLoaded', () => {
   overlay.addEventListener('click', closeModal);
 
   pImage.addEventListener('change', () => {
-    const file = pImage.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = () => {
-      pendingImageBase64 = reader.result;
-      pImagePreview.innerHTML = `<img src="${reader.result}" alt="">`;
-    };
-    reader.readAsDataURL(file);
+    const files = Array.from(pImage.files || []);
+    if (!files.length) return;
+
+    let pending = files.length;
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        photoItems.push({ type: 'file', value: reader.result });
+        pending--;
+        if (pending === 0) renderPhotoPreview();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    pImage.value = ''; // permite elegir más fotos después sin perder las ya agregadas
   });
 
   productForm.addEventListener('submit', async (e) => {
@@ -267,10 +298,10 @@ document.addEventListener('DOMContentLoaded', () => {
       price: Number(pPrice.value) || 0,
       category: pCategory.value,
       active: pActive.checked,
+      imageUrls: photoItems.filter(i => i.type === 'url').map(i => i.value),
+      imagesBase64: photoItems.filter(i => i.type === 'file').map(i => i.value),
     };
     if (pId.value) payload.id = pId.value;
-    if (pendingImageBase64) payload.imageBase64 = pendingImageBase64;
-    else if (pId.value) payload.imageUrl = currentImageUrl;
 
     try {
       const res = await apiPost(payload);
